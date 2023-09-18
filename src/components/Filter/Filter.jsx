@@ -1,28 +1,35 @@
 import PropTypes from 'prop-types';
 import { StyledFilter } from './Filter.styled';
-import { Component } from 'react';
+import { useState } from 'react';
+import { selectFilter } from 'redux/selectors';
+import { useSelector } from 'react-redux';
 
-class Filter extends Component {
-  handleInputChange = event => {
-    this.props.onFilter(event.target.value);
+function Filter({ onFilter }) {
+  const filter = useSelector(selectFilter);
+  const [isVisible, setIsVisible] = useState(false);
+
+  const handleClick = () => {
+    isVisible ? setIsVisible(false) : setIsVisible(true);
   };
 
-  render() {
-    return (
-      <StyledFilter>
-        <p className="margin-right">Find contacts by name</p>
-        <input
-          onChange={this.handleInputChange}
-          value={this.props.filter}
-          type="text"
-        />
-      </StyledFilter>
-    );
-  }
+  const handleInputChange = event => {
+    onFilter(event.target.value);
+  };
+
+  return (
+    <StyledFilter>
+      {isVisible && (
+        <input onChange={handleInputChange} value={filter} type="text" />
+      )}
+      <button type="button" onClick={handleClick}>
+        <span>Filter</span>
+      </button>
+    </StyledFilter>
+  );
 }
+
 Filter.propTypes = {
   onFilter: PropTypes.func.isRequired,
-  filter: PropTypes.string.isRequired,
 };
 
 export default Filter;

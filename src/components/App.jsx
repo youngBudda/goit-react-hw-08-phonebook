@@ -1,85 +1,68 @@
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import { setFilter } from 'redux/Slice';
-import {
-  addContactThunk,
-  deleteContactThunk,
-  getContactsThunk,
-} from 'redux/operation';
-import {
-  selectContacts,
-  selectError,
-  selectFilter,
-  selectFilteredContacts,
-  selectLoading,
-} from 'redux/selector';
-
-import Form from '../components/Form/Form';
-import ContactList from '../components/ContactList/ContactList';
-import Section from '../components/Section/Section';
-import Filter from '../components/Filter/Filter';
-import Loader from '../components/Loader/Loader';
+import { Route, Routes, Navigate } from 'react-router-dom';
+import { lazy, useEffect } from 'react';
+import { selectLoading } from 'redux/selectors';
+import { refreshUserThunk } from 'redux/user/userThunks';
+import { useSelector, useDispatch } from 'react-redux';
+import SharedLayout from './SharedLayout/SharedLayout';
+import PublicRoute from '../Guards/PublicRoute';
+import PrivateRoute from '../Guards/PrivateRoute';
 import Notification from './Notification/Notification';
+import Loader from './Loader/Loader';
+
+const Contacts = lazy(() => import('../pages/Contacts'));
+const Login = lazy(() => import('../pages/Login'));
+const Register = lazy(() => import('../pages/Register'));
+const Home = lazy(() => import('../pages/Home'));
 
 export function App() {
-  const items = useSelector(selectContacts);
   const isLoading = useSelector(selectLoading);
-  const filterValue = useSelector(selectFilter);
-  const error = useSelector(selectError);
-
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getContactsThunk());
-    //     .unwrap().catch((error)=>{
-    // toast.error(error.message);
-    // })
+    dispatch(refreshUserThunk());
   }, [dispatch]);
 
-  useEffect(() => {
-    if (!error) return;
-    toast.info(error);
-  }, [error]);
-
-  const onDeleteContact = id => {
-    dispatch(deleteContactThunk(id));
-  };
-
-  const onAddContact = contactData => {
-    const checkedContact = items.find(
-      contact => contactData.name === contact.name
-    );
-    if (checkedContact) {
-      toast.info(`${contactData.name} is already in your contacts`);
-      return;
-    } else {
-      dispatch(addContactThunk(contactData));
-    }
-  };
-
-  const onFilter = filterData => {
-    dispatch(setFilter(filterData));
-  };
-
-  const filteredContacts = useSelector(selectFilteredContacts);
-
   return (
-    <Section>
-      <h1>
-        <span>☎︎ </span>Phonebook
-      </h1>
-      <Form onAddContact={onAddContact} />
-      <h2>Contacts</h2>
-      <Filter onFilter={onFilter} filter={filterValue} />
-      {isLoading && <Loader />}
-      {items.length > 0 && !isLoading && (
-        <ContactList
-          contacts={filteredContacts}
-          onDeleteContact={onDeleteContact}
-        />
-      )}
+    <>
+      <Routes>
+        <Route path="/" element={<SharedLayout />}>
+          <Route
+            index
+            element={
+              <PublicRoute>
+                <Home />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="login"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="register"
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="contacts"
+            element={
+              <PrivateRoute>
+                <Contacts />
+              </PrivateRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
       <Notification />
-    </Section>
+      {isLoading && <Loader />}
+    </>
   );
 }
