@@ -1,63 +1,78 @@
-import { StyledLoginForm } from './LoginForm.styled';
-import PropTypes from 'prop-types';
-import { setError } from 'redux/rootSlice';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import SendIcon from '@mui/icons-material/Send';
+import { Form } from './styled';
+import { logIn } from '../../redux/auth/operationsAuth';
+import Swal from 'sweetalert2';
 
-const LoginForm = ({ onLogin }) => {
+const LoginForm = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
-  const handlerClick = () => {
-    dispatch(setError());
-    navigate('/register');
-  };
-
-  const handlerSubmit = evt => {
-    evt.preventDefault();
-    const userData = {
-      email: evt.currentTarget.email.value,
-      password: evt.currentTarget.password.value,
-    };
-    onLogin(userData);
-    evt.currentTarget.reset();
+  const handleSubmit = e => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    dispatch(
+      logIn({
+        email: form.elements.email.value,
+        password: form.elements.password.value,
+      })
+    )
+      .unwrap()
+      .then(res => {
+        Swal.fire({
+          position: 'center',
+          icon: 'success',
+          title: `Welcome!`,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      })
+      .catch(e => {
+        Swal.fire({
+          position: 'center',
+          icon: 'error',
+          text: `Invalid email or password. Please, try again!`,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      });
+    form.reset();
   };
 
   return (
-    <StyledLoginForm>
-      <form onSubmit={handlerSubmit}>
-        <h2>
-          Login<span>.</span>
-        </h2>
-        <label>
-          <span>Email </span>
-          <input type="email" name="email" required />
-        </label>
-        <label className="password">
-          <span>Password </span>
-          <input
-            type="password"
-            name="password"
-            minLength="6"
-            maxLength="12"
-            required
-          />
-        </label>
-        <p>
-          {/* Don't have an account? <Link to="/register">Sign up</Link> */}
-          Don't have an account?{' '}
-          <button type="button" className="link" onClick={handlerClick}>
-            Sign up
-          </button>
-        </p>
-        <button type="Submit">LOG IN</button>
-      </form>
-    </StyledLoginForm>
-  );
-};
+    <Form onSubmit={handleSubmit} autoComplete="off">
+      <h2>Log in </h2>
 
-LoginForm.propTypes = {
-  onLogin: PropTypes.func.isRequired,
+      <TextField
+        id="outlined-basic"
+        label="Email"
+        variant="outlined"
+        type="email"
+        name="email"
+        required
+        sx={{ width: '100%', mb: 3 }}
+      />
+      <TextField
+        id="outlined-basic"
+        label="Password"
+        variant="outlined"
+        type="password"
+        name="password"
+        required
+        sx={{ width: '100%', mb: 3 }}
+      />
+      <Button
+        color="success"
+        variant="contained"
+        type="submit"
+        endIcon={<SendIcon />}
+        sx={{ width: '100%', mb: 3 }}
+      >
+        Login
+      </Button>
+    </Form>
+  );
 };
 
 export default LoginForm;
